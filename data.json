@@ -1,0 +1,109 @@
+{
+  "meta": {
+    "eyebrow": "LIFECYCLE JOURNEY",
+    "title": "From Activation to Advocacy",
+    "subtitle": "Three of fourteen touchpoints are live today \u2014 the rest is the roadmap.",
+    "legend": {
+      "live": "Live today",
+      "gap": "Not yet built"
+    }
+  },
+  "stageBands": [
+    { "label": "Activating", "span": [0, 3], "style": "light" },
+    { "label": "Active Riders", "span": [4, 11], "style": "dark" },
+    { "label": "Lapsed", "span": [12, 13], "style": "mint" }
+  ],
+  "funnelBands": [
+    { "label": "Awareness", "span": [0, 0] },
+    { "label": "Consideration", "span": [1, 3] },
+    { "label": "Conversion", "span": [4, 4] },
+    { "label": "Retention", "span": [5, 11] },
+    { "label": "Reactivation", "span": [12, 13] }
+  ],
+  "touchpoints": [
+    {
+      "label": "Verification Nudge",
+      "live": true,
+      "description": "Platform-split reminder (iOS/Android/other) to finish licence upload and ID verification.",
+      "stage": "Activating"
+    },
+    {
+      "label": "First-Trip Incentive",
+      "live": true,
+      "description": "\u20ac10-off push once verified, encouraging the first booking within the critical activation window.",
+      "stage": "Activating"
+    },
+    {
+      "label": "Abandoned Booking",
+      "live": false,
+      "description": "GoCar's equivalent of cart abandonment \u2014 someone starts but doesn't complete a booking. No automation exists today.",
+      "stage": "Activating"
+    },
+    {
+      "label": "Browse / Search Reminder",
+      "live": false,
+      "description": "Nudge for people who searched availability but didn't book \u2014 not currently captured or actioned.",
+      "stage": "Activating"
+    },
+    {
+      "label": "First Trip Booked",
+      "live": true,
+      "description": "Event-triggered confirmation the moment a first booking is completed.",
+      "stage": "Active Riders"
+    },
+    {
+      "label": "2nd-Booking Nurture",
+      "live": false,
+      "description": "Encourage a second, different use case after the first trip. Not yet built.",
+      "stage": "Active Riders"
+    },
+    {
+      "label": "Occasion Reminder",
+      "live": false,
+      "description": "Need-based triggers \u2014 moving season, DIY projects, holiday weekends \u2014 matching GoCar's occasion-driven usage pattern.",
+      "stage": "Active Riders"
+    },
+    {
+      "label": "Review / NPS Request",
+      "live": true,
+      "description": "Live, branching flow already asking for feedback shortly after a trip.",
+      "stage": "Active Riders"
+    },
+    {
+      "label": "Loyalty Points Reminder",
+      "live": false,
+      "description": "GoCar's loyalty programme (79% satisfaction, 3k monthly users) has no lifecycle automation behind it today.",
+      "stage": "Active Riders"
+    },
+    {
+      "label": "Birthday / Anniversary",
+      "live": false,
+      "description": "No date-based personal milestone flow currently exists.",
+      "stage": "Active Riders"
+    },
+    {
+      "label": "Use-Case Expansion",
+      "live": false,
+      "description": "Cross-use-case discovery \u2014 e.g. someone who's only moved house tries a day trip.",
+      "stage": "Active Riders"
+    },
+    {
+      "label": "Predictive Recommendations",
+      "live": false,
+      "description": "Salesforce Predictive Intelligence attributes exist in the account but appear dormant \u2014 a real, already-paid-for capability going unused.",
+      "stage": "Active Riders"
+    },
+    {
+      "label": "Referral / Ambassador",
+      "live": false,
+      "description": "No structured referral or ambassador programme for top riders.",
+      "stage": "Lapsed"
+    },
+    {
+      "label": "Winback",
+      "live": false,
+      "description": "Reactivation journey exists in Salesforce Marketing Cloud but sits in Draft \u2014 never activated.",
+      "stage": "Lapsed"
+    }
+  ]
+}
