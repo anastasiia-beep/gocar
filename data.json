@@ -1,109 +1,52 @@
 {
   "meta": {
-    "eyebrow": "LIFECYCLE JOURNEY",
-    "title": "From Activation to Advocacy",
-    "subtitle": "Three of fourteen touchpoints are live today \u2014 the rest is the roadmap.",
-    "legend": {
-      "live": "Live today",
-      "gap": "Not yet built"
-    }
+    "eyebrow": "LIFECYCLE JOURNEY MAP",
+    "title": "GoCar Automation Architecture \u2014 Live vs. Gap",
+    "subtitle": "Every box below is real: traced directly from Salesforce Marketing Cloud. Solid green = live today. Dashed = not yet built."
   },
-  "stageBands": [
-    { "label": "Activating", "span": [0, 3], "style": "light" },
-    { "label": "Active Riders", "span": [4, 11], "style": "dark" },
-    { "label": "Lapsed", "span": [12, 13], "style": "mint" }
+  "headers": [
+    { "x": 30, "y": 20, "w": 440, "h": 90, "title": "PROSPECT \u2192 ACTIVATION", "goal": "Convert a signup into a verified, booking-ready rider" },
+    { "x": 730, "y": 20, "w": 260, "h": 90, "title": "FIRST BOOKING", "goal": "Drive and confirm the first trip" },
+    { "x": 1000, "y": 20, "w": 280, "h": 90, "title": "EXISTING RIDER", "goal": "Nurture repeat bookings & loyalty" },
+    { "x": 1290, "y": 20, "w": 210, "h": 90, "title": "LAPSED", "goal": "Win back quiet riders" }
   ],
-  "funnelBands": [
-    { "label": "Awareness", "span": [0, 0] },
-    { "label": "Consideration", "span": [1, 3] },
-    { "label": "Conversion", "span": [4, 4] },
-    { "label": "Retention", "span": [5, 11] },
-    { "label": "Reactivation", "span": [12, 13] }
+  "laneLabels": [
+    { "x": 1000, "y": 545, "text": "CROSS-CHANNEL DATA" }
   ],
-  "touchpoints": [
-    {
-      "label": "Verification Nudge",
-      "live": true,
-      "description": "Platform-split reminder (iOS/Android/other) to finish licence upload and ID verification.",
-      "stage": "Activating"
-    },
-    {
-      "label": "First-Trip Incentive",
-      "live": true,
-      "description": "\u20ac10-off push once verified, encouraging the first booking within the critical activation window.",
-      "stage": "Activating"
-    },
-    {
-      "label": "Abandoned Booking",
-      "live": false,
-      "description": "GoCar's equivalent of cart abandonment \u2014 someone starts but doesn't complete a booking. No automation exists today.",
-      "stage": "Activating"
-    },
-    {
-      "label": "Browse / Search Reminder",
-      "live": false,
-      "description": "Nudge for people who searched availability but didn't book \u2014 not currently captured or actioned.",
-      "stage": "Activating"
-    },
-    {
-      "label": "First Trip Booked",
-      "live": true,
-      "description": "Event-triggered confirmation the moment a first booking is completed.",
-      "stage": "Active Riders"
-    },
-    {
-      "label": "2nd-Booking Nurture",
-      "live": false,
-      "description": "Encourage a second, different use case after the first trip. Not yet built.",
-      "stage": "Active Riders"
-    },
-    {
-      "label": "Occasion Reminder",
-      "live": false,
-      "description": "Need-based triggers \u2014 moving season, DIY projects, holiday weekends \u2014 matching GoCar's occasion-driven usage pattern.",
-      "stage": "Active Riders"
-    },
-    {
-      "label": "Review / NPS Request",
-      "live": true,
-      "description": "Live, branching flow already asking for feedback shortly after a trip.",
-      "stage": "Active Riders"
-    },
-    {
-      "label": "Loyalty Points Reminder",
-      "live": false,
-      "description": "GoCar's loyalty programme (79% satisfaction, 3k monthly users) has no lifecycle automation behind it today.",
-      "stage": "Active Riders"
-    },
-    {
-      "label": "Birthday / Anniversary",
-      "live": false,
-      "description": "No date-based personal milestone flow currently exists.",
-      "stage": "Active Riders"
-    },
-    {
-      "label": "Use-Case Expansion",
-      "live": false,
-      "description": "Cross-use-case discovery \u2014 e.g. someone who's only moved house tries a day trip.",
-      "stage": "Active Riders"
-    },
-    {
-      "label": "Predictive Recommendations",
-      "live": false,
-      "description": "Salesforce Predictive Intelligence attributes exist in the account but appear dormant \u2014 a real, already-paid-for capability going unused.",
-      "stage": "Active Riders"
-    },
-    {
-      "label": "Referral / Ambassador",
-      "live": false,
-      "description": "No structured referral or ambassador programme for top riders.",
-      "stage": "Lapsed"
-    },
-    {
-      "label": "Winback",
-      "live": false,
-      "description": "Reactivation journey exists in Salesforce Marketing Cloud but sits in Draft \u2014 never activated.",
-      "stage": "Lapsed"
-    }
+  "nodes": [
+    { "id": "t1", "x": 30, "y": 150, "w": 190, "h": 55, "label": "Signed Up,\nNot Verified", "status": "trigger" },
+    { "id": "f1", "x": 260, "y": 150, "w": 210, "h": 65, "label": "Onboarding Step 1 \u2014\nActivation Nudges", "status": "built", "note": "First touch: Day 3, not Hour 1", "description": "GC_Onboarding_Step1 series (18 running journeys, one per interval cohort). Branches by platform, escalating reminders to upload licence documents." },
+    { "id": "t2", "x": 30, "y": 300, "w": 190, "h": 55, "label": "Account Verified", "status": "trigger" },
+    { "id": "f2", "x": 260, "y": 270, "w": 210, "h": 55, "label": "Verification Confirmation\n(Opt-in / Opt-out)", "status": "built", "description": "gocar_verification_email journey. Fires when account_verified__c = Yes. Splits by email_unsubscribe status \u2014 only ~20% of the historic base ever reaches the opted-in branch." },
+    { "id": "f3", "x": 260, "y": 355, "w": 210, "h": 55, "label": "Onboarding Step 2 \u2014\nFirst-Trip Push (\u20ac10)", "status": "built", "description": "GC_Onboarding_Step2 series. Post-verification activation push offering a first-trip discount code." },
+    { "id": "splitA", "x": 505, "y": 305, "w": 155, "h": 50, "label": "Platform Split\n(iOS / Android / Other)", "status": "oval", "description": "Recurring decision-split pattern used across GoCar's live journeys \u2014 branches to push notification for app users, email for the rest." },
+    { "id": "b1", "x": 730, "y": 150, "w": 210, "h": 55, "label": "First Trip Booked", "status": "built", "note": "Event-triggered", "description": "gocar_first_trip_booked journey. Fires on Account update when ftu_booking_date__c is set and total_trips__c was 0/null." },
+    { "id": "b2", "x": 730, "y": 250, "w": 210, "h": 55, "label": "Post-Trip Review /\nNPS Request", "status": "built", "description": "Pre_NPS_Touchpoint_Gocar. Fires ~1 hour after a trip, branches by platform, asks for feedback/NPS." },
+    { "id": "b3", "x": 730, "y": 350, "w": 210, "h": 55, "label": "2nd-Booking Nurture", "status": "gap", "description": "No automation exists to encourage a second booking after the first trip." },
+    { "id": "b4", "x": 730, "y": 440, "w": 210, "h": 55, "label": "Occasion Reminder\n(moving, DIY, holidays)", "status": "gap", "description": "GoCar's usage is need-triggered (moving house, day trips, big shop) \u2014 no occasion-based reminder flow exists yet." },
+    { "id": "c1", "x": 1000, "y": 150, "w": 210, "h": 55, "label": "Loyalty Points\nReminder", "status": "gap", "note": "Programme live, automation missing", "description": "GoCar's loyalty programme launched June 2024 with 79% satisfaction and 3k monthly users \u2014 but has no lifecycle automation behind it beyond one historic one-off push." },
+    { "id": "c2", "x": 1000, "y": 250, "w": 210, "h": 55, "label": "Birthday / Anniversary", "status": "gap", "description": "No date-based personal milestone flow exists." },
+    { "id": "c3", "x": 1000, "y": 350, "w": 210, "h": 55, "label": "Use-Case Expansion /\nCross-Sell", "status": "gap", "description": "No flow encourages riders to try a different use case (e.g. a house-mover trying a day trip)." },
+    { "id": "c4", "x": 1000, "y": 440, "w": 210, "h": 55, "label": "Predictive\nRecommendations", "status": "gap", "note": "Capability exists, dormant", "description": "Salesforce Predictive Intelligence attributes exist on the account (98 attributes, provisioned 2016) but show no evidence of active scoring or use in any journey." },
+    { "id": "p1", "x": 1000, "y": 560, "w": 210, "h": 55, "label": "Meta Audience Sync\n(daily)", "status": "built", "description": "GC_MetaAudiences automation, runs daily, builds app-install and FTU-status segments for Meta ad targeting/exclusion." },
+    { "id": "p2", "x": 1290, "y": 560, "w": 190, "h": 55, "label": "Meta Ads\nRetargeting", "status": "external", "description": "External system \u2014 Meta Ads platform receiving the synced audiences." },
+    { "id": "t3", "x": 1000, "y": 680, "w": 190, "h": 55, "label": "No Booking\n180+ Days", "status": "trigger" },
+    { "id": "d1", "x": 1290, "y": 150, "w": 210, "h": 55, "label": "Reactivation Flow", "status": "draft", "note": "Built, sitting in Draft \u2014 never activated", "description": "A Reactivation journey exists in Journey Builder but has never been switched on." },
+    { "id": "d2", "x": 1290, "y": 250, "w": 210, "h": 55, "label": "Winback", "status": "gap", "description": "No dedicated winback incentive flow exists for lapsed riders." },
+    { "id": "d3", "x": 1290, "y": 350, "w": 210, "h": 55, "label": "Final Preference /\nConsent Check", "status": "gap", "description": "No flow re-confirms marketing preferences before a contact is treated as fully churned." }
+  ],
+  "edges": [
+    ["t1", "f1"], ["f1", "t2"], ["t2", "f2"], ["t2", "f3"],
+    ["f2", "splitA"], ["f3", "splitA"], ["splitA", "b1"],
+    ["b1", "b2"], ["b1", "b3"], ["b3", "b4"],
+    ["b2", "c1"], ["b3", "c3"], ["b4", "c2"],
+    ["p1", "p2"],
+    ["t3", "d1"], ["d1", "d2"], ["d2", "d3"]
+  ],
+  "legend": [
+    { "status": "built", "label": "Live today" },
+    { "status": "gap", "label": "Not yet built" },
+    { "status": "draft", "label": "Built, not activated" },
+    { "status": "external", "label": "External system" }
   ]
 }

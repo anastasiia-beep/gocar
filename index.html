@@ -8,35 +8,30 @@
 </head>
 <body>
   <div class="page">
-    <header>
-      <p class="eyebrow" id="eyebrow"></p>
-      <h1 id="title"></h1>
-      <p class="subtitle" id="subtitle"></p>
-    </header>
+    <p class="eyebrow" id="eyebrow"></p>
+    <h1 id="title"></h1>
+    <p class="subtitle" id="subtitle"></p>
 
     <div class="chart-wrap">
-      <svg id="wave" viewBox="0 0 1400 480" preserveAspectRatio="xMidYMid meet"></svg>
+      <svg id="flow" viewBox="0 0 1560 820" preserveAspectRatio="xMinYMin meet"></svg>
       <div class="tooltip" id="tooltip"></div>
     </div>
 
-    <div class="bands">
-      <div class="band-row" id="stageRow"></div>
-      <div class="band-row" id="funnelRow"></div>
-    </div>
-
     <div class="legend" id="legend"></div>
-
-    <footer class="note">Hover or tap a touchpoint for detail. Data-driven from data.json &mdash; update content there without touching this page.</footer>
+    <footer class="note">Hover or tap a box for detail. Data-driven from data.json &mdash; add flows, mark them live, or update notes there without touching this page.</footer>
   </div>
 
 <script>
 const SVG_NS = "http://www.w3.org/2000/svg";
-const W = 1400, H = 480;
-const baseline = 340, amplitude = 150, cx = 700, sigma = 300;
 
-function curveY(x) {
-  return baseline - amplitude * Math.exp(-((x - cx) ** 2) / (2 * sigma ** 2));
-}
+const STATUS_STYLE = {
+  built:    { fill: "#bef19f", stroke: "#083b3a", text: "#083b3a", dash: false, tagFill: "#083b3a", tag: "\u2713 LIVE" },
+  gap:      { fill: "#f3f3f3", stroke: "#8da68f", text: "#5f5e5a", dash: true,  tagFill: "#8da68f", tag: "\u2013 GAP" },
+  draft:    { fill: "#F7E8C8", stroke: "#d9a441", text: "#083b3a", dash: false, tagFill: "#d9a441", tag: "\u25CF DRAFT" },
+  trigger:  { fill: "#e9ede7", stroke: "#8da68f", text: "#083b3a", dash: false, tagFill: "#8da68f", tag: "" },
+  external: { fill: "#ffffff", stroke: "#5f5e5a", text: "#5f5e5a", dash: true,  tagFill: "#5f5e5a", tag: "EXTERNAL" },
+  oval:     { fill: "#083b3a", stroke: "#083b3a", text: "#bef19f", dash: false, tagFill: "#083b3a", tag: "" }
+};
 
 function el(tag, attrs, parent) {
   const node = document.createElementNS(SVG_NS, tag);
@@ -45,16 +40,23 @@ function el(tag, attrs, parent) {
   return node;
 }
 
-function buildBandRow(container, bands, total, cellClassFn, labelFn) {
-  container.innerHTML = "";
-  bands.forEach(b => {
-    const count = b.span[1] - b.span[0] + 1;
-    const div = document.createElement("div");
-    div.className = "band-cell " + cellClassFn(b);
-    div.style.flex = count + " 1 0";
-    div.textContent = labelFn(b);
-    container.appendChild(div);
-  });
+function elbowPath(a, b) {
+  const sameRow = Math.abs((a.y + a.h/2) - (b.y + b.h/2)) < 5;
+  if (sameRow) {
+    const x1 = a.x + a.w, y1 = a.y + a.h/2;
+    const x2 = b.x, y2 = b.y + b.h/2;
+    return `M ${x1},${y1} L ${x2},${y2}`;
+  }
+  if (b.x >= a.x + a.w - 5) {
+    const x1 = a.x + a.w, y1 = a.y + a.h/2;
+    const x2 = b.x, y2 = b.y + b.h/2;
+    const midx = (x1 + x2) / 2;
+    return `M ${x1},${y1} L ${midx},${y1} L ${midx},${y2} L ${x2},${y2}`;
+  }
+  const x1 = a.x + a.w/2, y1 = a.y + a.h;
+  const x2 = b.x + b.w/2, y2 = b.y;
+  const midy = (y1 + y2) / 2;
+  return `M ${x1},${y1} L ${x1},${midy} L ${x2},${midy} L ${x2},${y2}`;
 }
 
 fetch('data.json')
@@ -64,89 +66,101 @@ fetch('data.json')
     document.getElementById('title').textContent = data.meta.title;
     document.getElementById('subtitle').textContent = data.meta.subtitle;
 
-    const svg = document.getElementById('wave');
-    const n = data.touchpoints.length;
-    const xs = [];
-    for (let i = 0; i <= 200; i++) xs.push(60 + i * (1340 - 60) / 200);
-    const pts = xs.map(x => [x, curveY(x)]);
-    const pathD = "M " + pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" L ");
-    const fillD = pathD + ` L ${xs[xs.length-1].toFixed(1)},${(baseline+20).toFixed(1)} L ${xs[0].toFixed(1)},${(baseline+20).toFixed(1)} Z`;
+    const svg = document.getElementById('flow');
+    const defs = el("defs", {}, svg);
+    const marker = el("marker", { id: "arrow", markerWidth: 8, markerHeight: 8, refX: 6, refY: 3, orient: "auto" }, defs);
+    el("path", { d: "M0,0 L0,6 L7,3 z", fill: "#8da68f" }, marker);
 
-    el("path", { d: fillD, fill: "#083b3a", opacity: "0.95" }, svg);
-    el("path", { d: pathD, fill: "none", stroke: "#bef19f", "stroke-width": "4" }, svg);
+    const nodeById = {};
+    data.nodes.forEach(n => nodeById[n.id] = n);
 
-    const markerXs = [];
-    for (let i = 0; i < n; i++) markerXs.push(100 + i * (1300 - 100) / (n - 1));
+    data.edges.forEach(([aId, bId]) => {
+      const a = nodeById[aId], b = nodeById[bId];
+      if (!a || !b) return;
+      el("path", { d: elbowPath(a, b), fill: "none", stroke: "#8da68f", "stroke-width": 2, "marker-end": "url(#arrow)" }, svg);
+    });
+
+    data.headers.forEach(h => {
+      el("rect", { x: h.x, y: h.y, width: h.w, height: h.h, rx: 6, fill: "#083b3a" }, svg);
+      const t1 = el("text", { x: h.x + 14, y: h.y + 28, "font-family": "Jost", "font-size": 15, "font-weight": 700, fill: "#bef19f" }, svg);
+      t1.textContent = h.title;
+      const t2 = el("text", { x: h.x + 14, y: h.y + 52, "font-family": "Jost", "font-size": 11.5, fill: "#dfe8db" }, svg);
+      t2.textContent = "Goal: " + h.goal;
+    });
+
+    (data.laneLabels || []).forEach(l => {
+      const t = el("text", { x: l.x, y: l.y, "font-family": "Jost", "font-size": 11, "font-weight": 700, "letter-spacing": 1, fill: "#8da68f" }, svg);
+      t.textContent = l.text;
+    });
 
     const tooltip = document.getElementById('tooltip');
     const chartWrap = document.querySelector('.chart-wrap');
 
-    data.touchpoints.forEach((tp, i) => {
-      const x = markerXs[i];
-      const dotY = curveY(x);
-      const stemH = i % 2 === 0 ? 55 : 150;
-      const labelY = dotY - stemH;
-      const nLines = 1;
-      const g = el("g", { class: "marker " + (tp.live ? "live" : "gap"), tabindex: "0" }, svg);
-      el("line", { x1: x, y1: dotY, x2: x, y2: labelY + 10, stroke: "#8da68f", "stroke-width": "1.5" }, g);
-      el("circle", {
-        cx: x, cy: dotY, r: 7,
-        fill: tp.live ? "#bef19f" : "#f3f3f3",
-        stroke: tp.live ? "#083b3a" : "#8da68f",
-        "stroke-width": "2.5"
-      }, g);
-      const words = tp.label.split(" ");
-      const mid = Math.ceil(words.length / 2);
-      const line1 = words.slice(0, mid).join(" ");
-      const line2 = words.slice(mid).join(" ");
-      const text = el("text", { x, y: labelY - 6, "text-anchor": "middle", class: "label", "font-size": "14.5" }, g);
-      el("tspan", { x, dy: 0 }, text).textContent = line2 ? line1 : tp.label;
-      if (line2) el("tspan", { x, dy: 16 }, text).textContent = line2;
-      const sym = el("text", { x, y: labelY + 10, "text-anchor": "middle", "font-size": "11", fill: tp.live ? "#083b3a" : "#8da68f" }, g);
-      sym.textContent = tp.live ? "\u2713" : "\u2013";
+    data.nodes.forEach(n => {
+      const style = STATUS_STYLE[n.status] || STATUS_STYLE.gap;
+      const g = el("g", { class: "node-box", tabindex: "0" }, svg);
 
-      function showTip(evt) {
-        tooltip.innerHTML = `<span class="tip-title">${tp.label} \u2014 ${tp.live ? 'Live' : 'Gap'}</span>${tp.description}`;
-        const wrapRect = chartWrap.getBoundingClientRect();
-        const svgRect = svg.getBoundingClientRect();
-        const scaleX = svgRect.width / W;
-        const scaleY = svgRect.height / H;
-        const left = (svgRect.left - wrapRect.left) + x * scaleX;
-        const top = (svgRect.top - wrapRect.top) + Math.min(labelY - 20, dotY - 20) * scaleY;
-        tooltip.style.left = left + "px";
-        tooltip.style.top = Math.max(top, 10) + "px";
-        tooltip.classList.add("visible");
+      if (n.status === "oval") {
+        el("rect", { x: n.x, y: n.y, width: n.w, height: n.h, rx: n.h/2, fill: style.fill, stroke: style.stroke, "stroke-width": 2 }, g);
+      } else {
+        const rectAttrs = { x: n.x, y: n.y, width: n.w, height: n.h, rx: 6, fill: style.fill, stroke: style.stroke, "stroke-width": 2 };
+        if (style.dash) rectAttrs["stroke-dasharray"] = "6,4";
+        el("rect", rectAttrs, g);
       }
-      function hideTip() { tooltip.classList.remove("visible"); }
 
-      g.addEventListener("mouseenter", showTip);
-      g.addEventListener("mouseleave", hideTip);
-      g.addEventListener("focus", showTip);
-      g.addEventListener("blur", hideTip);
-      g.addEventListener("touchstart", (e) => { e.preventDefault(); showTip(); setTimeout(hideTip, 3000); });
+      const lines = n.label.split("\n");
+      const hasNote = !!n.note;
+      const startY = n.y + n.h/2 - (lines.length - 1) * 8 + (hasNote ? -2 : 4);
+      lines.forEach((line, i) => {
+        const t = el("text", {
+          x: n.x + n.w/2, y: startY + i * 16, "text-anchor": "middle",
+          "font-family": "Jost", "font-size": 12.5, "font-weight": 600, fill: style.text
+        }, g);
+        t.textContent = line;
+      });
+
+      if (style.tag) {
+        const tag = el("text", {
+          x: n.x + n.w - 6, y: n.y + 13, "text-anchor": "end",
+          "font-family": "Jost", "font-size": 8.5, "font-weight": 700, fill: style.tagFill
+        }, g);
+        tag.textContent = style.tag;
+      }
+
+      if (n.note) {
+        const noteEl = el("text", {
+          x: n.x + n.w/2, y: n.y + n.h - 6, "text-anchor": "middle",
+          "font-family": "Jost", "font-size": 8.5, "font-style": "italic", fill: "#5f5e5a"
+        }, g);
+        noteEl.textContent = n.note;
+      }
+
+      if (n.description) {
+        function showTip() {
+          tooltip.innerHTML = `<span class="tip-title">${n.label.replace(/\n/g, ' ')}</span>${n.description}`;
+          const wrapRect = chartWrap.getBoundingClientRect();
+          const svgRect = svg.getBoundingClientRect();
+          const scaleX = svgRect.width / 1560;
+          const scaleY = svgRect.height / 820;
+          const left = (svgRect.left - wrapRect.left) + (n.x + n.w/2) * scaleX;
+          const top = (svgRect.top - wrapRect.top) + n.y * scaleY;
+          tooltip.style.left = left + "px";
+          tooltip.style.top = Math.max(top - 8, 10) + "px";
+          tooltip.classList.add("visible");
+        }
+        function hideTip() { tooltip.classList.remove("visible"); }
+        g.addEventListener("mouseenter", showTip);
+        g.addEventListener("mouseleave", hideTip);
+        g.addEventListener("focus", showTip);
+        g.addEventListener("blur", hideTip);
+        g.addEventListener("touchstart", (e) => { e.preventDefault(); showTip(); setTimeout(hideTip, 3500); });
+      }
     });
 
-    buildBandRow(
-      document.getElementById('stageRow'),
-      data.stageBands,
-      n,
-      b => "style-" + b.style,
-      b => b.label
-    );
-
-    buildBandRow(
-      document.getElementById('funnelRow'),
-      data.funnelBands,
-      n,
-      b => "funnel" + (b.label === "Retention" ? " retention" : ""),
-      b => b.label
-    );
-
     const legend = document.getElementById('legend');
-    legend.innerHTML = `
-      <div class="legend-item"><span class="dot live"></span>${data.meta.legend.live}</div>
-      <div class="legend-item"><span class="dot gap"></span>${data.meta.legend.gap}</div>
-    `;
+    legend.innerHTML = data.legend.map(l =>
+      `<div class="legend-item"><span class="swatch ${l.status}"></span>${l.label}</div>`
+    ).join("");
   })
   .catch(err => {
     document.querySelector('.page').innerHTML = '<p style="color:#5f5e5a">Could not load data.json &mdash; make sure this page is served over http(s) (e.g. GitHub Pages), not opened directly as a local file.</p>';
